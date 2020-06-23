@@ -2,6 +2,7 @@ import sys
 import pygame
 from settings import Settings
 from ship import Ship
+from bullet import Bullet
 
 class AlienInvasion:
     def __init__(self):
@@ -14,6 +15,8 @@ class AlienInvasion:
         self.settings.screen_height = self.screen.get_rect().height
         pygame.display.set_caption("Allien Invasion")
         self.ship = Ship(self)
+        #create a group for the bullets so that we can manage them together 
+        self.bullets = pygame.sprite.Group()
 
         #set background color
         self.bg_color = (230, 230, 230)
@@ -23,7 +26,14 @@ class AlienInvasion:
         while True:
             self._check_events()
             self.ship.update()
+            self.bullets.update()
             self._update_screen()
+
+            #get rid of the bullets that have passed the top of the screen
+            for bullet in self.bullets.copy():
+                if bullet.rect.bottom <= 0:
+                    self.bullets.remove(bullet)
+            print(len(self.bullets))
     
     def _check_events(self):
         #respond to keypresses and mouse events
@@ -46,6 +56,13 @@ class AlienInvasion:
             self.ship.moving_up = True
         elif event.key == pygame.K_DOWN:
             self.ship.moving_down = True
+        elif event.key == pygame.K_SPACE:
+            self._fire_bullet()
+        
+    def _fire_bullet(self):
+        #create a new bullet and add it to the bullets group
+        new_bullet = Bullet(self)
+        self.bullets.add(new_bullet)
 
     def check_keyup_events(self, event):
         #respond to key releases
@@ -65,6 +82,9 @@ class AlienInvasion:
         #update images on the screen, flip to the new screen
         self.screen.fill(self.settings.bg_color)
         self.ship.blitme()
+
+        for bullet in self.bullets.sprites():
+            bullet.draw_bullet()
 
         #make the most recently drawn screen visibile
         pygame.display.flip()
